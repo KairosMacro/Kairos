@@ -87,9 +87,10 @@ If there are credits that are missing, create an issue post in the repository.
   </picture>
 </a>
 
-[downloads-shield]: https://img.shields.io/github/downloads/KairosMacroDevTeam/Kairos/total?label=Total%20Downloads&labelColor=000000&color=383838
-[release-shield]: https://img.shields.io/github/v/release/KairosMacroDevTeam/Kairos?label=Current%20Version&labelColor=%23000000&color=383838
-[discord-shield]: https://img.shields.io/badge/Discord-Join_Server-%235865F2?logo=discord&logoColor=white&labelColor=%23000000
+[downloads-shield]: https://img.shields.io/github/downloads/KairosMacroDevTeam/Kairos/total?label=Total%20Downloads&labelColor=000000&color=6c2ebe
+[release-shield]: https://img.shields.io/github/v/release/KairosMacroDevTeam/Kairos?label=Current%20Version&labelColor=%23000000&color=8341bc
+[discord-shield]: https://img.shields.io/discord/1469873168142303422?logo=discord&label=Discord%20Server&labelColor=000000&color=606cec
 [releases-link]: https://github.com/KairosMacroDevTeam/Kairos/releases
 [latest-release-link]: https://github.com/KairosMacroDevTeam/Kairos/releases/latest
 [discord-invite-link]: https://discord.gg/SWWfETTEjJ
+
