@@ -53,7 +53,7 @@ class Config {
             , "SoundFile", "C:\Windows\Media\Windows Critical Stop.wav"
         )
         , "Tracker", Map(
-            "Passives", "Scorch"
+            "Passives", "scorch"
         )
         , "KeyAlignment", Map(
             "AlignmentKey", "e"
