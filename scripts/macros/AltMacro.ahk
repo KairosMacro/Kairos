@@ -275,12 +275,16 @@
 		MouseMove windowX + (windowWidth // 2), windowY + (windowHeight // 2)
 		sleep 500
 
-		if (this.ClaimHiveEnabled)
-				if this.ClaimHive()
+		if (this.ClaimHiveEnabled) {
+				if this.ClaimHive() {
 					return 1
-		else
+				} else {
+					return 0
+				}
+		} else {
 			this.DetectSpawn()
 				return 1
+		}
 	}
 
 	Gather(patternName, field, index) {
@@ -331,7 +335,7 @@
 	ClaimHive(ignoreCam := 0) {
 		State.offsetY := GetYOffset()
 		GetImg() {
-			pBMScreen := Gdip_BitmapFromScreen(windowX + (windowWidth // 2) "|" windowY + State.offsetY "|400|125")
+			pBMScreen := Gdip_BitmapFromScreen(windowX + (windowWidth // 2) - 200 "|" windowY + State.offsetY "|400|150")
 			while ((A_Index <= 20) && (Gdip_ImageSearch(pBMScreen, bitmaps["FriendJoin"][1], , , , , , 6) = 1 || Gdip_ImageSearch(pBMScreen, bitmaps["FriendJoin"][2], , , , , , 6) = 1)) {
 				Gdip_DisposeImage(pBMScreen)
 				MouseMove windowX + (windowWidth // 2) - 3, windowY + 24
@@ -342,68 +346,43 @@
 			}
 			return pBMScreen
 		}
-		system := 1
-		loop 5 {
-			ActivateRoblox()
-			GetRobloxClientPos()
-			MouseMove windowX + 350, windowY + State.offsetY + 100
 
-			if (A_Index > 1) {
-				PrevKeyDelay := A_KeyDelay
-				SetKeyDelay(300)
-				send "{" SC_Esc "}{" SC_R "}{" SC_Enter "}"
-				n := 0
-				while ((n < 2) && (A_Index <= 70)) {
-					sleep 100
-					pBMScreen := Gdip_BitmapFromScreen(windowX "|" windowY "|" windowWidth "|50")
-					n += ((Gdip_ImageSearch(pBMScreen, bitmaps["emptyhealth"], , , , , , 10) || this.HealthBar()) = (n = 0))
-					Gdip_DisposeImage(pBMScreen)
-				}
-				sleep 500
-			}
+		ActivateRoblox()
+		GetRobloxClientPos()
+		MouseMove windowX + 350, windowY + State.offsetY + 100
+		if !ignoreCam
+			this.DetectSpawn()
+		
+		movement := this.spawnMoveTo(this.slotMove[this.HiveSlot])
+		RunPath(movement)
+		KeyWait "F14", "D T5 L"
+		KeyWait "F14", "T120 L"
+		EndPath()
+		sleep 300
 
-			if !ignoreCam
-				this.DetectSpawn() ; just to fix camera rotation
-
-			if system = 1 {
-				movement := this.spawnMoveTo(this.slotMove[this.HiveSlot])
-				RunPath(movement)
-				KeyWait "F14", "D T5 L"
-				KeyWait "F14", "T120 L"
-				EndPath()
-				sleep 500
-
-				pBMScreen := GetImg()
-				if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1) {
-					Gdip_DisposeImage(pBMScreen)
-					Send "{" SC_E " down}"
-					sleep 500
-					Send "{" SC_E " up}"
-					HiveConfirmed := 1
-					MouseMove windowX + 350, windowY + State.offsetY + 100
-					return 1
-				} else if this.atHive() {
-					HiveConfirmed := 1
-					MouseMove windowX + 350, windowY + State.offsetY + 100
-					return 1
-				}
-				Gdip_DisposeImage(pBMScreen)
-			}
-			system := 0
-			continue
+		pBMScreen := GetImg()
+		if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1) {
+			Gdip_DisposeImage(pBMScreen)
+			send "{" SC_E " down}"
+			sleep 100
+			send "{" SC_E " up}"
+			HiveConfirmed := 1
+			return 1
+		} else if this.atHive() {
+			HiveConfirmed := 1
+			return 1
 		}
+		Gdip_DisposeImage(pBMScreen)
 
 		Sleep 500
 		GetRobloxClientPos()
-		MouseMove windowX + 350, windowY + State.offsetY + 100
 		send "{" ZoomOut " 8}"
-
 		movement :=
 		(
 			'Send "{' RightKey ' down}"
-			Walk(4)
+			move(4)
 			Send "{' FwdKey ' down}"
-			Walk(20)
+			move(20)
 			Send "{' RightKey ' up}{' FwdKey ' up}"'
 		)
 		RunPath(movement)
@@ -413,6 +392,8 @@
 
 		slots := Map()
 		move := walk(9.2, LeftKey)
+		foundHive := false
+
 		Loop this.HiveSlot {
 			if (A_Index > 1) {
 				RunPath(move)
@@ -420,15 +401,13 @@
 				KeyWait "F14", "T120 L"
 				EndPath()
 			}
-
-			sleep 500
+			sleep 300
 			pBMScreen := GetImg()
-			if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1) {
+			if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1)
 				slots[A_Index] := 1
-			}
 			Gdip_DisposeImage(pBMScreen)
-
 			if (slots.Has(this.HiveSlot) && (slots[this.HiveSlot] = 1)) {
+				foundHive := true
 				break
 			} else {
 				if ((slot := ObjMinIndex(slots)) > 0) {
@@ -438,24 +417,26 @@
 					KeyWait "F14", "T120 L"
 					EndPath()
 
-					sleep 500
+					sleep 300
 					pBMScreen := GetImg()
 					if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1) {
 						this.HiveSlot := slot
+						foundHive := true
 						break
 					}
 					Gdip_DisposeImage(pBMScreen)
 				} else {
-					Loop (6 - this.HiveSlot) {
+					loop (6 - this.HiveSlot) {
 						RunPath(move)
 						KeyWait "F14", "D T5 L"
 						KeyWait "F14", "T120 L"
 						EndPath()
 
-						sleep 500
+						sleep 300
 						pBMScreen := GetImg()
 						if (Gdip_ImageSearch(pBMScreen, bitmaps["claimhive"],,,,,,2,,6) = 1) {
-							this.HiveSlot := A_Index
+							this.HiveSlot := this.HiveSlot + A_Index
+							foundHive := true
 							break 2
 						}
 						Gdip_DisposeImage(pBMScreen)
@@ -465,12 +446,13 @@
 			if (A_Index = 5)
 				return 0
 		}
+		if !foundHive
+			return 0
 
-		Send "{" SC_E " down}"
+		send "{" SC_E " down}"
 		sleep 100
-		Send "{" SC_E " up}"
+		send "{" SC_E " up}"
 		HiveConfirmed := 1
-		MouseMove windowX + 350, windowY + State.offsetY + 100
 		return 1
 	}
 
@@ -489,6 +471,8 @@
 
 	Reset() {
 		static HiveDown := false
+		static lastReset := 0
+		gracePeriod := 7000
 
 		if (IsSet(Boost) && Boost)
 			Boost.stats.BuffState["Timer"] := 0
@@ -512,13 +496,18 @@
 			SetKeyDelay PrevKeyDelay
 
 			if (!this.ClaimHiveEnabled) {
-				if this.DetectSpawn()
+				if this.DetectSpawn() {
+					lastReset := A_TickCount
 					return
+				}
 			} else {
-				if (!this.atHive() && this.DetectSpawn()) {
+				grace := (A_TickCount - lastReset) < gracePeriod
+				if ((grace || !this.atHive()) && this.DetectSpawn()) {
 					sleep 500
-					if this.ClaimHive(1)
+					if this.ClaimHive(1) {
+						lastReset := A_TickCount
 						return
+					}
 				}
 				if (HiveDown)
 					sendinput "{" RotDown "}"
@@ -545,8 +534,11 @@
 		}
 
 		CloseRoblox()
-		if (this.Reconnect())
-			return
+		while !(this.Reconnect()) {
+			sleep 1000
+			CloseRoblox()
+		}
+		return
 	}
 
 	HealthBar() {
@@ -573,7 +565,7 @@
 		static fail := 0
 		ActivateRoblox()
 		GetRobloxClientPos()
-		pBMScreen := Gdip_BitmapFromScreen(windowX + windowWidth // 2 - 150 "|" windowY + State.offsetY + 40 "|350|60")
+		pBMScreen := Gdip_BitmapFromScreen(windowX + windowWidth // 2 - 200 "|" windowY + State.offsetY + 20 "|400|100")
 		out := Gdip_ImageSearch(pBMScreen, bitmaps["honey"], , , , , , 5) = 1 ||  Gdip_ImageSearch(pBMScreen, bitmaps["collect"], , , , , , 5) = 1
 		Gdip_DisposeImage(pBMScreen)
 		fail := out = 1 ? 0 : fail + 1
